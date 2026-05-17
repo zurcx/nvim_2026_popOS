@@ -51,11 +51,10 @@ return {
       vim.keymap.set("t", "<C-k>", [[<C-\><C-n><C-w>k]])
       vim.keymap.set("t", "<C-l>", [[<C-\><C-n><C-w>l]])
 
-      -- 🚀 rodar Python
       vim.keymap.set("n", "<leader>rp", function()
         vim.cmd("w")
-        term:toggle()
-        term:send("clear && python3 " .. vim.fn.expand("%"), true)
+        local file = vim.fn.expand("%:p")
+        vim.cmd("TermExec cmd='clear && python3 " .. file .. "'")
       end, { desc = "Run Python" })
 
       -- 🚀 rodar Node

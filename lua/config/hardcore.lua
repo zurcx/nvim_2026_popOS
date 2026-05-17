@@ -111,4 +111,20 @@ vim.keymap.set("n", "<leader>pf", "<cmd>lua require('utils.fstring').transform()
   silent = true,
 })
 
+-- sair do teminal com
+vim.keymap.set("t", "jk", [[<C-\><C-n>]], {
+  noremap = true,
+  silent = true,
+  desc = "Sair do terminal",
+})
+
+vim.keymap.set("n", "<leader>ti", "i", {
+  desc = "Voltar pro terminal insert",
+})
+
+vim.keymap.set("t", "<C-h>", [[<C-\><C-n><C-w>h]])
+vim.keymap.set("t", "<C-j>", [[<C-\><C-n><C-w>j]])
+vim.keymap.set("t", "<C-k>", [[<C-\><C-n><C-w>k]])
+vim.keymap.set("t", "<C-l>", [[<C-\><C-n><C-w>l]])
+
 return M

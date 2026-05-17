@@ -173,4 +173,11 @@ return {
       return 'print(f"' .. table.concat(parts, ", ") .. '")'
     end),
   }),
+
+  -- 🔥 PRINT TEXTO LIVRE
+  s("prt", {
+    t('print("'),
+    i(1),
+    t('")'),
+  }),
 }

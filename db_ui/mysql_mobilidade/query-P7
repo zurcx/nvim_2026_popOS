@@ -1,0 +1,7 @@
+SELECT
+  MAX(valor),
+  MIN(valor)
+FROM
+  corridas
+WHERE
+  status = 'concluida'

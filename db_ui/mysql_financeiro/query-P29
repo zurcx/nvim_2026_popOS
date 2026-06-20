@@ -1,0 +1,11 @@
+SELECT
+  p.categoria AS categoria,
+  COUNT(i.id) AS qtde
+FROM
+  investimentos i
+JOIN produtos p
+  ON i.produto_id = p.id
+GROUP BY
+  p.categoria
+HAVING
+  COUNT(i.id) > 5

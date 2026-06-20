@@ -1,0 +1,5 @@
+SELECT
+  *
+FROM
+  corridas
+LIMIT 10

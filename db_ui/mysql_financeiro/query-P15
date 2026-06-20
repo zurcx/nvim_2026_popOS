@@ -1,0 +1,8 @@
+SELECT
+  nome AS cliente,
+  i.valor
+FROM
+  investimentos i
+RIGHT JOIN clientes c
+  ON i.cliente_id = c.id
+WHERE i.valor is null

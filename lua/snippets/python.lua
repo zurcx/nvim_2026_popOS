@@ -156,21 +156,33 @@ return {
     t('}")'),
   }),
 
-  -- 🔥 MULTI VAR DINÂMICO
+  -- 🔥 MULTI VAR DINÂMICO PROFISSIONAL
   s("ppx", {
     f(function()
       local input = vim.fn.input("Vars: ")
+
       local vars = vim.split(input, ",")
       local parts = {}
 
-      for _, v in ipairs(vars) do
-        v = vim.trim(v)
+      for _, raw in ipairs(vars) do
+        local v = vim.trim(raw)
+
         if v ~= "" then
-          table.insert(parts, v .. ": {" .. v .. "}")
+          -- 🔥 suporta LABEL=variavel
+          local label, var = v:match("(.+)=(.+)")
+
+          if label and var then
+            label = vim.trim(label)
+            var = vim.trim(var)
+
+            table.insert(parts, label .. ": {" .. var .. "}")
+          else
+            table.insert(parts, v .. ": {" .. v .. "}")
+          end
         end
       end
 
-      return 'print(f"' .. table.concat(parts, ", ") .. '")'
+      return 'print(f"' .. table.concat(parts, " | ") .. '")'
     end),
   }),
 

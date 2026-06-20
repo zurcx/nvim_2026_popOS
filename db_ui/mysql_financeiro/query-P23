@@ -1,0 +1,12 @@
+SELECT
+  p.categoria AS categoria,
+  round(
+    AVG(i.valor),
+    2
+  ) AS ticket_medio
+FROM
+  produtos p
+JOIN investimentos i
+  ON p.id = i.produto_id
+GROUP BY
+  p.categoria

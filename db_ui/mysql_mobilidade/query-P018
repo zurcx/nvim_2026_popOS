@@ -1,0 +1,7 @@
+SELECT
+  status,
+  COUNT(*) qtde
+FROM
+  motoristas
+GROUP BY
+  status;

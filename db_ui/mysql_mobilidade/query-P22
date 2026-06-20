@@ -1,0 +1,4 @@
+SELECT
+  COUNT(DISTINCT(marca)) AS qtd_marcas
+FROM
+  veiculos;

@@ -1,0 +1,6 @@
+SELECT
+  AVG(duracao_min) AS media_duracao_min
+FROM
+  corridas
+WHERE
+  status = 'conclida'

@@ -1,0 +1,8 @@
+SELECT
+  b.nome AS cliente,
+  a.id,
+  a.valor
+FROM
+  investimentos a
+JOIN clientes b
+  ON a.cliente_id = a.id

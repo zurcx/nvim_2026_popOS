@@ -1,0 +1,14 @@
+SELECT
+  *
+FROM
+  investimentos;
+SELECT
+  a.id,
+  b.nome AS cliente,
+  c.nome AS produto
+FROM
+  investimentos a
+JOIN clientes b
+  ON a.cliente_id = b.id
+JOIN produtos c
+  ON a.produto_id = c.id

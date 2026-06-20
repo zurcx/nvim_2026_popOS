@@ -1,0 +1,9 @@
+SELECT
+  ROUND(
+    AVG(duracao_min),
+    1
+  ) AS duracao_media
+FROM
+  corridas
+WHERE
+  status = 'concluida'

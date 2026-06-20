@@ -1,0 +1,10 @@
+SELECT
+  COUNT(DISTINCT(cidade_id))
+FROM
+  passageiros;
+SELECT
+  b.nome
+FROM
+  passageiros a
+JOIN cidades b
+  ON a.cidade_id = b.id

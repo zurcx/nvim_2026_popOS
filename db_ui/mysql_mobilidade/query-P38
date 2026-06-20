@@ -1,0 +1,13 @@
+SELECT
+  SUBSTRING_INDEX(
+    email,
+    CONCAT('@'),
+    -1
+  ) AS dominio_email,
+  COUNT(*) AS total_passageiros
+FROM
+  passageiros
+GROUP BY
+  dominio_email
+ORDER BY
+  total_passageiros DESC;

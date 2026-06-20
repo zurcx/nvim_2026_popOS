@@ -1,0 +1,11 @@
+SELECT
+  forma_pagamento,
+  COUNT(*) AS numero_corridas,
+  SUM(valor) AS volume,
+  round(AVG(valor)) AS ticket_medio
+FROM
+  corridas
+WHERE
+  status = 'concluida'
+GROUP BY
+  forma_pagamento

@@ -1,0 +1,9 @@
+SELECT
+  round(
+    AVG(valor),
+    2
+  ) AS ticket_medio
+FROM
+  corridas
+WHERE
+  status = 'conclida'

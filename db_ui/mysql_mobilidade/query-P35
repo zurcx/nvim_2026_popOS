@@ -1,0 +1,17 @@
+SELECT
+  YEAR(data_hora) AS ano,
+  quarter(data_hora) AS trimestre,
+  forma_pagamento,
+  COUNT(*) AS numero_corridas,
+  SUM(valor) AS volume_total,
+  AVG(valor) AS ticket_medio
+FROM
+  corridas
+WHERE
+  status = 'concluida'
+GROUP BY
+  forma_pagamento,
+  YEAR(data_hora),
+  quarter(data_hora)
+ORDER BY
+  ano DESC

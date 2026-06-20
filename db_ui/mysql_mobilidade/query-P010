@@ -1,0 +1,7 @@
+SELECT
+  ROUND(
+    AVG(nota),
+    2
+  ) AS media_notas
+FROM
+  avaliacoes

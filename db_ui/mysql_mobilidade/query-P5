@@ -1,0 +1,6 @@
+SELECT
+  SUM(valor) AS faturamento
+FROM
+  corridas
+WHERE
+  status = 'concluida'

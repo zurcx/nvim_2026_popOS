@@ -77,3 +77,49 @@ opt.completeopt = { "menu", "menuone", "noselect" }
 
 -- Mouse
 opt.mouse = "a"
+
+-- Configurações do vim-dadbod-ui
+vim.g.db_ui_save_location = vim.fn.stdpath("config") .. "/db_ui"
+vim.g.db_ui_show_database_navigation = 1
+
+-- Função para ler o arquivo .env manualmente antes de carregar o Dadbod
+local function load_env()
+  local env_file = vim.fn.getcwd() .. "/.env"
+  if vim.fn.filereadable(env_file) == 1 then
+    for line in io.lines(env_file) do
+      if not line:match("^%s*#") and line:match("=") then
+        local key, value = line:match("^([^=]+)=(.*)$")
+        if key and value then
+          -- Limpa espaços em branco das pontas da chave e do valor
+          key = key:match("^%s*(.-)%s*$")
+          value = value:match("^%s*(.-)%s*$")
+          -- Remove aspas se houver
+          value = value:gsub("^['\"]", ""):gsub("['\"]$", "")
+
+          -- Injeta em ambos os escopos para garantir a leitura do plugin
+          vim.env[key] = value
+          string.gsub(key, ".*", function(k)
+            vim.fn.setenv(k, value)
+          end)
+        end
+      end
+    end
+  end
+end
+
+-- Executa a leitura do .env na pasta atual
+load_env()
+
+-- Agora o vim.g.dbs puxa com total certeza usando a função de fallback do sistema
+vim.g.dbs = {
+  vendas_mysql = vim.env.DB_MYSQL or os.getenv("DB_MYSQL"),
+  locadora_oracle = vim.env.DB_ORACLE_TESTE or os.getenv("DB_ORACLE_TESTE"),
+}
+
+-- Desativa o format-on-save apenas para arquivos SQL para não quebrar queries
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "sql",
+  callback = function()
+    vim.b.autoformat = false
+  end,
+})

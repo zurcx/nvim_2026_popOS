@@ -1,0 +1,7 @@
+SELECT
+  a.id,
+  b.nome
+FROM
+  investimentos a
+JOIN produtos b
+  ON a.produto_id = b.id;

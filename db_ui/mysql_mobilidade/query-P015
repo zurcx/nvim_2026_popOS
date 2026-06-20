@@ -1,0 +1,7 @@
+SELECT
+  categoria,
+  COUNT(*)
+FROM
+  veiculos
+GROUP BY
+  categoria

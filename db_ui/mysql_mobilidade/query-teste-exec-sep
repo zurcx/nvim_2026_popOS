@@ -1,0 +1,9 @@
+SELECT
+  *
+FROM
+  veiculos;
+SELECT
+  *
+FROM
+  corridas;
+DESC cidades;

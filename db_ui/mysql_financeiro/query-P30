@@ -1,0 +1,13 @@
+SELECT
+  c.nome AS cliente,
+  COUNT(i.id) AS investimento,
+  SUM(i.valor) volume
+FROM
+  clientes c
+JOIN investimentos i
+  ON c.id = i.cliente_id
+GROUP BY
+  c.nome
+HAVING
+  SUM(i.valor) > 50000
+  AND investimento > 2

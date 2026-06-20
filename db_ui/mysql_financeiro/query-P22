@@ -1,0 +1,10 @@
+SELECT
+  a.nome AS assessor,
+  COUNT(i.id) nr_investimentos,
+  SUM(i.valor) AS volume
+FROM
+  investimentos i
+JOIN assessores a
+  ON i.assessor_id = a.id
+GROUP BY
+  a.nome

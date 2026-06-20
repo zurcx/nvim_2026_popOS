@@ -1,0 +1,17 @@
+SELECT
+  COUNT(*)
+FROM
+  veiculos;
+SELECT
+  marca,
+  COUNT(*) AS frota,
+  MIN(ano) mais_antigo,
+  MAX(ano) mais_novo,
+  round(
+    AVG(ano),
+    0
+  ) AS ano_medio
+FROM
+  veiculos
+GROUP BY
+  marca

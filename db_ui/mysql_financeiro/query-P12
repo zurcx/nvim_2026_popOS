@@ -1,0 +1,14 @@
+SELECT
+  c.nome AS cliente,
+  a.nome AS produto,
+  a.categoria AS categoria,
+  c.nome AS assessor,
+  b.valor AS valor
+FROM
+  produtos a
+JOIN investimentos b
+  ON a.id = b.produto_id
+JOIN assessores c
+  ON b.assessor_id = c.id
+JOIN clientes d
+  ON b.cliente_id = d.id

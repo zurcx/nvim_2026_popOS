@@ -1,0 +1,10 @@
+SELECT
+  round(
+    AVG(distancia_km),
+    0
+  ) AS distancia_media,
+  COUNT(distancia_km) AS distancia_total
+FROM
+  corridas
+WHERE
+  status = 'concluida'

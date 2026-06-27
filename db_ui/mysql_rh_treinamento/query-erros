@@ -1,0 +1,26 @@
+INSERT INTO rh_departamento(
+  id,
+  nome
+)
+VALUES(
+  1,
+  'Repetido'
+);
+
+INSERT INTO rh_funcionario
+   (nome, cpf, email, data_admissao, salario, departamento_id, cargo_id)
+ VALUES ('Outra','11111111111','ana@empresa.com','2024-01-01',5000,1,1);
+ 
+INSERT INTO rh_funcionario
+  (nome, cpf, email, data_admissao, salario, departamento_id, cargo_id)
+VALUES ('Outra','12345678900','outra@empresa.com','2024-01-01',5000,1,1);
+
+
+INSERT INTO rh_funcionario (nome,cpf,email,data_admissao,salario,departamento_id,cargo_id)
+ VALUES ('Salario Neg','33333333333','neg@empresa.com','2024-01-01',-100,1,1);
+ 
+ INSERT INTO rh_funcionario (nome,cpf,email,data_admissao,salario,departamento_id,cargo_id)
+ VALUES ('Salario Zero','44444444444','zero@empresa.com','2024-01-01',0,1,1);
+ 
+ INSERT INTO rh_funcionario (nome,cpf,email,data_nascimento,data_admissao,salario,departamento_id,cargo_id)
+ VALUES ('Tempo Errado','55555555555','tempo@empresa.com','2000-01-01','1990-01-01',5000,1,1);

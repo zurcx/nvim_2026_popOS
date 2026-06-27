@@ -182,6 +182,9 @@ local conexoes_fixas = {
   mysql_streaming = "mysql://luiz.cruz:Cruz1974@localhost:3306/streaming",
   mysql_mobilidade = "mysql://luiz.cruz:Cruz1974@localhost:3306/mobilidade",
   mysql_financeiro = "mysql://luiz.cruz:Cruz1974@localhost:3306/financeiro",
+  mysql_rh_treinamento = "mysql://luiz.cruz:Cruz1974@localhost:3306/rh_treinamento",
+  mysql_logistica = "mysql://luiz.cruz:Cruz1974@localhost:3306/logistica",
+  mysql_jogos = "mysql://luiz.cruz:Cruz1974@localhost:3306/jogos",
 }
 
 -- Mescla as conexões fixas com as dinâmicas (sem apagar o Oracle/.env)
@@ -224,9 +227,91 @@ vim.keymap.set("n", "<leader>bn", function()
   end
 end, { desc = "Salvar e Sincronizar Nome da Query" })
 
--- Executar APENAS o bloco/query atual onde o cursor está posicionado
-vim.keymap.set("v", "<leader>r", "<Plug>(DBUI_ExecuteQuery)", { desc = "Executar Seleção SQL" })
-vim.keymap.set("n", "<leader>r", "vip<Plug>(DBUI_ExecuteQuery)", { desc = "Executar Query Atual" })
+-- ============================================================================
+-- EXECUÇÃO DE SQL COM PARÂMETROS VIA INPUT NATIVO DO NEOCVIM (INTERCEPÇÃO LUA)
+-- ============================================================================
+
+local function rodar_sql_com_inputs(lines)
+  -- 1. Lineariza o SQL (junta em uma linha só e limpa espaços extras)
+  local query = table.concat(lines, " "):gsub("%s+", " "):gsub(";%s*$", "")
+  if query == "" then
+    return
+  end
+
+  -- 2. Cria uma cópia limpa da query APENAS para escanear os parâmetros válidos
+  -- Remove comentários em bloco /* ... */
+  local query_limpa = query:gsub("/%*.-%*/", "")
+  -- Remove comentários de linha tradicionais (-- ... e # ...)
+  query_limpa = query_limpa:gsub("%-%-.-$", ""):gsub("#.-$", "")
+
+  -- 3. Captura os parâmetros na ordem EXATA em que aparecem na query limpa
+  local param_list = {}
+  local v_vistas = {}
+
+  for param in query_limpa:gmatch(":[%w_]+") do
+    if not v_vistas[param] then
+      v_vistas[param] = true
+      table.insert(param_list, param)
+    end
+  end
+
+  -- 4. Função recursiva para pedir os inputs um por um na barra do Neovim
+  local function pedir_parametro(index)
+    if index > #param_list then
+      -- Todos os parâmetros válidos preenchidos! Dispara a query original via :DB
+      vim.cmd("DB " .. query)
+      return
+    end
+
+    local p_name = param_list[index]
+
+    -- Abre o prompt nativo do Neovim respeitando a ordem de leitura
+    vim.ui.input({ prompt = "Valor para " .. p_name .. ": " }, function(input)
+      if not input or input == "" then
+        vim.notify("Execução cancelada. Parâmetro vazio.", vim.log.levels.WARN)
+        return
+      end
+
+      -- BLINDAGEM INTELIGENTE DE TIPOS:
+      if input:match("^'.*'$") or input:match('^".*"$') then
+        -- Já está envelopado adequadamente
+      else
+        -- Se conter letras, traços ou barras, adiciona aspas simples
+        if input:match("%a") or input:match("-") or input:match("/") or input:match("%s") then
+          input = "'" .. input .. "'"
+        end
+      end
+
+      -- Escapa caracteres especiais do input e substitui na query original
+      local safe_input = input:gsub("%%", "%%%%")
+      query = query:gsub(p_name, safe_input)
+
+      -- Vai para o próximo parâmetro da lista
+      pedir_parametro(index + 1)
+    end)
+  end
+
+  -- Inicia a captura de parâmetros
+  pedir_parametro(1)
+end
+
+-- MODO VISUAL: Captura seleção, limpa quebras de linha e processa parâmetros
+vim.keymap.set("v", "<leader>r", function()
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<ESC>", true, false, true), "x", false)
+  local sline = vim.fn.getpos("'<")[2]
+  local eline = vim.fn.getpos("'>")[2]
+  local lines = vim.api.nvim_buf_get_lines(0, sline - 1, eline, false)
+  rodar_sql_com_inputs(lines)
+end, { desc = "Executar Seleção SQL com Parâmetros" })
+
+-- MODO NORMAL: Captura o bloco sob o cursor, limpa quebras e processa parâmetros
+vim.keymap.set("n", "<leader>r", function()
+  local old_reg = vim.fn.getreg("v")
+  vim.cmd('normal! "vyip')
+  local lines = vim.fn.split(vim.fn.getreg("v"), "\n")
+  vim.fn.setreg("v", old_reg)
+  rodar_sql_com_inputs(lines)
+end, { desc = "Executar Bloco SQL Atual com Parâmetros" })
 
 print("🔥 hardcore carregado")
 

@@ -1,0 +1,27 @@
+SELECT
+  nome,
+  IFNULL(
+    telefone,
+    'sem telefone'
+  ) AS telefone_ifnull,
+  COALESCE(
+    telefone,
+    'sem telefone'
+  ) AS telefone_coalesce
+FROM
+  funcionario;
+
+  SELECT cpf,
+       CAST(REPLACE(REPLACE(cpf,'.',''),'-','') AS UNSIGNED) AS cpf_num
+FROM funcionario;
+
+SELECT nome,
+       CONCAT('R$ ', CAST(salario AS CHAR)) AS salario_txt
+FROM funcionario;
+
+SELECT nome,
+       DATEDIFF(CAST('2026-06-22' AS DATE), data_admissao) AS dias
+FROM funcionario;
+
+
+

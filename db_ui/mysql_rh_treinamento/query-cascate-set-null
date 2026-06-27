@@ -1,0 +1,24 @@
+CREATE TABLE rh_dependente (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  funcionario_id  INT NOT NULL,
+  nome            VARCHAR(100) NOT NULL,
+  FOREIGN KEY (funcionario_id) REFERENCES rh_funcionario(id)
+    ON DELETE CASCADE
+);
+INSERT INTO rh_dependente (funcionario_id, nome) VALUES (1,'Filho A'),(1,'Filho B');
+DELETE FROM rh_funcionario WHERE id = 1;
+SELECT * FROM rh_dependente;     -- os dois dependentes somem junto r
+
+CREATE TABLE rh_dependente2 (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  funcionario_id  INT NULL,        -- precisa aceitar NULL
+  nome            VARCHAR(100) NOT NULL,
+  FOREIGN KEY (funcionario_id) REFERENCES rh_funcionario(id)
+    ON DELETE SET NULL
+);
+
+INSERT INTO rh_dependente2 (funcionario_id, nome) VALUES (2,'Filho C');
+
+DELETE FROM rh_funcionario WHERE id = 2;
+
+SELECT * FROM rh_dependente2;    -- 'Filho C' permanece, funcionario_id = NULL

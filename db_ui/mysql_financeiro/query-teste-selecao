@@ -4,13 +4,15 @@ WITH um_dois_quatro AS (
   FROM
     clientes
   WHERE
-    id IN(1,
-    2,
-    4)
+    id IN(
+      1,
+      2,
+      4
+    )
 ) SELECT
   nome
 FROM
-  um_dois_quatro
-WHERE
+  um_dois_quatro/*WHERE
   data_cadastro BETWEEN :dt_inicial
   AND :dt_final;
+*/

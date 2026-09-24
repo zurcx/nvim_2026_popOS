@@ -1,0 +1,65 @@
+CREATE TABLE silver_jogadores(
+  id_jogador INT NOT NULL,
+  nomeVARCHAR(100) NOT NULL,
+  clubeVARCHAR(50) NOT NULL,
+  posicaoVARCHAR(30),
+  gols INT NOT NULL DEFAULT 0,
+  partidas_jogadas INT NOT NULL DEFAULT 0,
+  media_gols_por_partidaDECIMAL(
+    5,
+    2
+  ),
+  classificacao_artilheiroVARCHAR(20) CONSTRAINT pk_jogador PRIMARY KEY(id_jogador),
+  CONSTRAINT chk_gols_nao_negativo CHECK(gols >= 0),
+  CONSTRAINT chk_partidas_nao_negativo CHECK(partidas_jogadas >= 0)
+);
+SELECT
+  *
+FROM
+  bronze_jogadores;
+INSERT INTO silver_jogadores SELECT
+  id_jogador,
+  nome,
+  clube,
+  posicao,
+  gols,
+  partidas_jogadas-- colunas novasjj
+media_gols_por_partida CREATE TABLE silver_jogadores(
+  id_jogador INT PRIMARY KEY,
+  nome VARCHAR(100) NOT NULL,
+  clubeVARCHAR(50) NOT NULL,
+  posicaoVARCHAR(30),
+  gols INT DEFAULT 0CHECK(gols >= 0),
+  partidas_jogadas INT DEFAULT 0CHECK(partidas_jogadas >= 0),
+  media_gols_por_partidaDECIMAL(
+    5,
+    2
+  ),
+  classificacao_artilheiroVARCHAR(20)
+);
+INSERT INTO silver_jogadores(id_jogador,
+nome,
+clube,
+posicao,
+gols,
+partidas_jogadas,
+media_gols_por_partida,
+classificacao_artilheiro) SELECT
+  id_jogador,
+  nome,
+  clube,
+  posicao,
+  gols,
+  partidas_jogadas,
+  CASE
+    WHEN partidas_jogadas = 0 THEN 0.00
+    ELSE CAST(gols AS DECIMAL) / partidas_jogadas
+  END AS media_gols_por_partida,
+  CASE
+    WHEN gols >= 20 THEN 'Artilheiro'
+    WHEN gols >= 10
+    AND gols <= 19 THEN 'Goleador'
+    ELSE 'Regular'
+  END AS classificacao_artilheiro
+FROM
+  futebol.jogadores_bronze;

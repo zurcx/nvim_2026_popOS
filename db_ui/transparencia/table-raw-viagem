@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS raw_viagem (
+    id_viagem VARCHAR(50),
+    num_proposta VARCHAR(50),
+    situacao VARCHAR(100),
+    viagem_urgente VARCHAR(10),
+    cod_orgao_superior VARCHAR(50),
+    nome_orgao_superior VARCHAR(255),
+    nome_viajante VARCHAR(255),
+    cargo VARCHAR(255),
+    data_inicio VARCHAR(50),
+    data_fim VARCHAR(50),
+    destinos VARCHAR(4000),
+    motivo VARCHAR(4000),
+    valor_diarias VARCHAR(50),
+    valor_passagens VARCHAR(50),
+    valor_devolucao VARCHAR(50),
+    valor_outros_gastos VARCHAR(50),
+    valor_total VARCHAR(50),
+    duracao_dias VARCHAR(50)
+);

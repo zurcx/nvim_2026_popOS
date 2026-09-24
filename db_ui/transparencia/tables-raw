@@ -1,0 +1,60 @@
+SHOW tables;
+DROP TABLE raw_viagem;
+CREATE TABLE raw_viagem(
+  id_viagemVARCHAR(50),
+  num_propostaVARCHAR(50),
+  situacaoVARCHAR(100),
+  viagem_urgenteVARCHAR(10),
+  cod_orgao_superiorVARCHAR(50),
+  nome_orgao_superiorVARCHAR(255),
+  nome_viajanteVARCHAR(255),
+  cargoVARCHAR(255),
+  data_inicioVARCHAR(50),
+  data_fimVARCHAR(50),
+  destinosVARCHAR(4000),
+  motivoVARCHAR(4000),
+  valor_diariasVARCHAR(50),
+  valor_passagensVARCHAR(50),
+  valor_devolucaoVARCHAR(50),
+  valor_outros_gastosVARCHAR(50),
+  valor_totalVARCHAR(50),
+  duracao_diasVARCHAR(50)
+);
+CREATE TABLE raw_passagem(
+  id_passagemVARCHAR(50),
+  id_viagemVARCHAR(50),
+  meio_transporteVARCHAR(100),
+  pais_origem_idaVARCHAR(100),
+  uf_origem_idaVARCHAR(100),
+  cidade_origem_idaVARCHAR(150),
+  pais_destino_idaVARCHAR(100),
+  uf_destino_idaVARCHAR(100),
+  cidade_destino_idaVARCHAR(150),
+  valor_passagemVARCHAR(50),
+  taxa_servicoVARCHAR(50),
+  data_emissaoVARCHAR(50)
+);
+CREATE TABLE raw_pagamento(
+  id_pagamentoVARCHAR(50),
+  id_viagemVARCHAR(50),
+  num_propostaVARCHAR(50),
+  nome_orgao_pagadorVARCHAR(255),
+  nome_ug_pagadoraVARCHAR(255),
+  tipo_pagamentoVARCHAR(100),
+  valorVARCHAR(50)
+);
+DROP TABLE raw_trecho;
+CREATE TABLE raw_trecho(
+  id_trechoVARCHAR(50),
+  id_viagemVARCHAR(50),
+  sequencia_trechoVARCHAR(50),
+  origem_dataVARCHAR(50),
+  origem_ufVARCHAR(100),
+  origem_cidadeVARCHAR(150),
+  destino_dataVARCHAR(50),
+  destino_ufVARCHAR(100),
+  destino_cidadeVARCHAR(150),
+  meio_transporteVARCHAR(100),
+  numero_diariasVARCHAR(50),
+  missaoVARCHAR(50)
+);

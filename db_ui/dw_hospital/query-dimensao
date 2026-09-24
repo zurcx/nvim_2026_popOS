@@ -1,0 +1,67 @@
+CREATE TABLE dim_risco(
+  sk_risco INT PRIMARY KEY,
+  corVARCHAR(20),
+  prioridadeVARCHAR(30),
+  tempo_alvo_min INT
+);
+INSERT INTO dim_risco
+VALUES(-1,
+'Não Informado',
+'Sem classificação',
+0),
+(
+  1,
+  'Vermelho',
+  'Emergência',
+  5
+),
+(
+  2,
+  'Laranja',
+  'Muito Urgente',
+  10
+),
+(
+  3,
+  'Amarela',
+  'Urgente',
+  60
+),
+(
+  4,
+  'Verde',
+  'Pouco Urgente',
+  120
+),
+(
+  5,
+  'Azul',
+  'Não Urgente',
+  240
+);
+SELECT
+  *
+FROM
+  dim_risco;
+DROP TABLE IF EXISTS dim_convenio;
+CREATE TABLE dim_convenio(
+  sk_convenio INT PRIMARY KEY,
+  nomeVARCHAR(40),
+  tipoVARCHAR(20)
+);
+INSERT INTO dim_convenio
+VALUES(-1,
+'Não Informado',
+'Desconhecido'),
+(1,
+'Unimed',
+'Privado'),
+(2,
+'SUS',
+'Público'),
+(3,
+'Particular',
+'Particular'),
+(4,
+'Amil',
+'Privado');

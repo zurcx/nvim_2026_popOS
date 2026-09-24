@@ -1,0 +1,67 @@
+-- -------------------------------------------------------------------------------------
+-- 1. DIM_CATEGORIA (Grão: Uma grafia da origem)
+-- -------------------------------------------------------------------------------------
+-- Registro Sentinela
+
+INSERT INTO dim_categoria (sk_categoria, categoria_origem, nome_categoria, grupo_categoria)
+VALUES (-1, 'N/I', 'Nao Informado', 'Nao Informado');
+
+-- Carga das 18 grafias cruas mapeadas para 7 categorias padronizadas
+
+INSERT INTO dim_categoria (categoria_origem, nome_categoria, grupo_categoria)
+SELECT 
+    `CategoriaProduto` AS categoria_origem,
+    CASE 
+        WHEN UPPER(`CategoriaProduto`) LIKE '%MED%'    THEN 'Medicamento'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%PETISC%' THEN 'Petisco'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%RA%'     THEN 'Racao'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%HIG%'    THEN 'Higiene'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%BRINQ%'  THEN 'Brinquedo'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%ACESS%'  THEN 'Acessorio'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%SERV%'   THEN 'Servico'
+        ELSE 'Nao Informado'
+    END AS nome_categoria,
+    CASE 
+        WHEN UPPER(`CategoriaProduto`) LIKE '%MED%'    THEN 'Saude e Higiene'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%PETISC%' THEN 'Alimentacao'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%RA%'     THEN 'Alimentacao'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%HIG%'    THEN 'Saude e Higiene'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%BRINQ%'  THEN 'Bem-estar'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%ACESS%'  THEN 'Bem-estar'
+        WHEN UPPER(`CategoriaProduto`) LIKE '%SERV%'   THEN 'Bem-estar'
+        ELSE 'Nao Informado'
+    END AS grupo_categoria
+FROM stg_pedido
+WHERE `CategoriaProduto` IS NOT NULL AND `CategoriaProduto` <> ''
+GROUP BY `CategoriaProduto`;
+
+-- -------------------------------------------------------------------------------------
+-- 2. DIM_PRACA (Grão: Uma praça de atendimento)
+-- -------------------------------------------------------------------------------------
+-- Registro Sentinela
+
+INSERT INTO dim_praca (sk_praca, cod_praca, nome_praca, regional, domicilios_com_pet)
+VALUES (-1, 'N/I', 'Nao Informado', 'Nao Informado', NULL);
+
+-- Carga das 12 praças únicas
+
+INSERT INTO dim_praca (cod_praca, nome_praca, regional, domicilios_com_pet)
+SELECT 
+    TRIM(`CodPraca`) AS cod_praca,
+    MAX(TRIM(`NomePraca`)) AS nome_praca,
+    MAX(TRIM(`Regional`)) AS regional,
+    MAX(CAST(REPLACE(REPLACE(TRIM(`DomiciliosComPet`), '.', ''), ' ', '') AS SIGNED)) AS domicilios_com_pet
+FROM stg_loja_praca
+GROUP BY TRIM(`CodPraca`);
+
+-- -------------------------------------------------------------------------------------
+-- 3. BRIDGE_LOJA_PRACA (Tabela ponte N:N com Fator de Rateio)
+-- -------------------------------------------------------------------------------------
+
+INSERT INTO bridge_loja_praca (cod_loja, sk_praca, fator_publico)
+SELECT 
+    TRIM(lp.`CodLoja`) AS cod_loja,
+    dp.sk_praca,
+    CAST(REPLACE(REPLACE(TRIM(lp.`PercentualPublico`), '%', ''), ',', '.') AS DECIMAL(6,4)) / 100.0 AS fator_publico
+FROM stg_loja_praca lp
+JOIN dim_praca dp ON dp.cod_praca = TRIM(lp.`CodPraca`);

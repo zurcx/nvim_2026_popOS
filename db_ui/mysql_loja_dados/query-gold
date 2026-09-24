@@ -1,0 +1,18 @@
+DROP TABLE IF EXISTS gold_por_categoria;
+CREATE TABLE gold_por_categoria AS
+SELECT
+    categoria,
+    COUNT(*)                               AS qtd_itens,
+    SUM(quantidade)                        AS unidades_vendidas,
+    SUM(valor_total)                       AS receita,
+    SUM(lucro)                             AS lucro,
+    ROUND(AVG(margem_lucro), 4)            AS margem_media
+FROM silver_vendas
+GROUP BY categoria
+ORDER BY receita DESC;
+
+
+/*RANK() OVER (ORDER BY SUM(valor_total) DESC) AS posicao - dica da 4
+na 6 usar esta subquerie : (SELECT SUM(valor_total) FROM silver_vendas)*/
+
+ 

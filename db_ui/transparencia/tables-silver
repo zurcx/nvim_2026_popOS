@@ -1,0 +1,91 @@
+CREATE TABLE silver_viagem(
+  id_viagem VARCHAR(20) NOT NULL,
+  num_propostaVARCHAR(20),
+  situacaoVARCHAR(50),
+  viagem_urgenteVARCHAR(5),
+  cod_orgao_superiorVARCHAR(20),
+  nome_orgao_superiorVARCHAR(255) NOT NULL,
+  nome_viajanteVARCHAR(255),
+  cargoVARCHAR(255),
+  data_inicio DATE,
+  data_fim DATE,
+  destinosVARCHAR(4000),
+  motivoVARCHAR(4000),
+  valor_diariasDECIMAL(
+    10,
+    2
+  ),
+  valor_passagensDECIMAL(
+    10,
+    2
+  ),
+  valor_devolucaoDECIMAL(
+    10,
+    2
+  ),
+  valor_outros_gastosDECIMAL(
+    10,
+    2
+  ),
+  valor_totalDECIMAL(
+    12,
+    2
+  ),
+  duracao_dias INT,
+  CONSTRAINT pk_silver_viagem PRIMARY KEY(id_viagem),
+  CONSTRAINT chk_valor_diarias CHECK(valor_diarias >= 0)
+);
+CREATE TABLE silver_passagem(
+  id_passagem INT NOT NULL AUTO_INCREMENT,
+  id_viagemVARCHAR(20) NOT NULL,
+  meio_transporteVARCHAR(50),
+  pais_origem_idaVARCHAR(60),
+  uf_origem_idaVARCHAR(40),
+  cidade_origem_idaVARCHAR(80),
+  pais_destino_idaVARCHAR(60),
+  uf_destino_idaVARCHAR(40),
+  cidade_destino_idaVARCHAR(80),
+  valor_passagemDECIMAL(
+    10,
+    2
+  ) CHECK(valor_passagem >= 0),
+  taxa_servico DECIMAL(
+    10,
+    2
+  ) CHECK(taxa_servico >= 0),
+  data_emissao DATE,
+  CONSTRAINT pk_silver_passagem PRIMARY KEY(id_passagem),
+  CONSTRAINT fk_passagem_viagem FOREIGN KEY(id_viagem) REFERENCES silver_viagem(id_viagem)
+);
+CREATE TABLE silver_pagamento(
+  id_pagamento INT NOT NULL AUTO_INCREMENT,
+  id_viagemVARCHAR(20) NOT NULL,
+  num_propostaVARCHAR(20),
+  nome_orgao_pagadorVARCHAR(255),
+  nome_ug_pagadoraVARCHAR(255),
+  tipo_pagamentoVARCHAR(50) NOT NULL,
+  valorDECIMAL(
+    10,
+    2
+  ) CHECK(valor >= 0),
+  CONSTRAINT pk_silver_pagamento PRIMARY KEY(id_pagamento),
+  CONSTRAINT fk_pagamento_viagem FOREIGN KEY(id_viagem) REFERENCES silver_viagem(id_viagem)
+);
+CREATE TABLE silver_trecho(
+  id_trecho INT NOT NULL AUTO_INCREMENT,
+  id_viagemVARCHAR(20) NOT NULL,
+  sequencia_trecho INT,
+  origem_data DATE,
+  origem_ufVARCHAR(40),
+  origem_cidadeVARCHAR(80),
+  destino_data DATE,
+  destino_ufVARCHAR(40),
+  destino_cidadeVARCHAR(80),
+  meio_transporteVARCHAR(50),
+  numero_diariasDECIMAL(
+    10,
+    2
+  ) CHECK(numero_diarias >= 0),
+  CONSTRAINT pk_silver_trecho PRIMARY KEY(id_trecho),
+  CONSTRAINT fk_trecho_viagem FOREIGN KEY(id_viagem) REFERENCES silver_viagem(id_viagem)
+);

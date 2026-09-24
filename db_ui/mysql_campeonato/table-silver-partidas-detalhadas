@@ -1,0 +1,19 @@
+CREATE TABLE silver_partidas_detalhadas (
+    id_partida INT NOT NULL,
+    data_partida DATE NOT NULL,
+    nome_estadio VARCHAR(100), -- Pode ser NULL dependendo da decisão do JOIN
+    cidade_estadio VARCHAR(100),
+    time_mandante VARCHAR(50) NOT NULL,
+    time_visitante VARCHAR(50) NOT NULL,
+    gols_mandante INT NOT NULL DEFAULT 0,
+    gols_visitante INT NOT NULL DEFAULT 0,
+    total_gols_partida INT NOT NULL,
+    ano_partida INT NOT NULL,
+    mes_partida INT NOT NULL,
+    resultado_mandante VARCHAR(10) NOT NULL,
+    saldo_gols INT NOT NULL,
+    
+    CONSTRAINT pk_partida PRIMARY KEY (id_partida),
+    CONSTRAINT chk_gols_mandante CHECK (gols_mandante >= 0),
+    CONSTRAINT chk_gols_visitante CHECK (gols_visitante >= 0)
+);

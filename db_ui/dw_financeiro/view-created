@@ -1,0 +1,226 @@
+CREATE OR REPLACE VIEW vw_log as 
+select cod_cliente,
+campo_alterado,
+valor_antigo,
+valor_novo,
+str_to_date(NULLIF(data_alteracao, ''),'%d/%m/%Y') as data_alteracao
+from stg_log_alteracoes;
+
+select * from vw_log;
+
+CREATE VIEW vw_titulos AS
+SELECT
+    num_titulo,
+    nota_fiscal,
+    cod_cliente,
+    STR_TO_DATE(dt_emissao   , '%d/%m/%Y') AS dt_emissao,
+    STR_TO_DATE(dt_vencimento, '%d/%m/%Y') AS dt_vencimento,
+    -- NULLIF troca a data em branco por NULL ANTES de tentar converter
+    STR_TO_DATE(NULLIF(dt_pagamento,''), '%d/%m/%Y') AS dt_pagamento,
+    CAST(REPLACE(REPLACE(valor_original,'.',''),',','.') AS DECIMAL(10,2)) AS valor_original,
+    CAST(REPLACE(REPLACE(valor_pago    ,'.',''),',','.') AS DECIMAL(10,2)) AS valor_pago,
+    CAST(REPLACE(REPLACE(juros_multa   ,'.',''),',','.') AS DECIMAL(10,2)) AS juros_multa,
+    CAST(REPLACE(REPLACE(desconto      ,'.',''),',','.') AS DECIMAL(10,2)) AS desconto,
+    forma_cobranca,
+    canal_venda,
+    CASE WHEN recorrente IN ('S','Sim') THEN 'Sim' ELSE 'Não' END AS recorrente
+FROM stg_titulos;
+
+
+CREATE VIEW vw_titulos_calc AS
+SELECT
+    t.*,
+    valor_original - valor_pago + juros_multa - desconto AS valor_em_aberto,
+    DATEDIFF(IFNULL(dt_pagamento, '2025-08-31'), dt_vencimento) AS dias_atraso,
+    CASE WHEN dt_pagamento IS NULL AND dt_vencimento < '2025-08-31'
+         THEN 1 ELSE 0 END AS inadimplente,
+    CASE WHEN dt_pagamento IS NULL AND dt_vencimento < '2025-08-31' THEN 'Em atraso'
+         WHEN dt_pagamento IS NULL                                  THEN 'A vencer'
+         WHEN dt_pagamento <  dt_vencimento                         THEN 'Pago antecipado'
+         WHEN dt_pagamento =  dt_vencimento                         THEN 'Pago em dia'
+         ELSE 'Pago com atraso'
+    END AS status
+FROM vw_titulos t;
+
+CREATE TABLE classificacao_scd(
+  cod_cliente VARCHAR(10),
+  campo_alterado VARCHAR(30),
+  tipo_scd VARCHAR(10)
+);
+
+select * from classificacao_scd;
+
+
+INSERT INTO classificacao_scd VALUES
+('C001','Categoria','Tipo 2'),
+('C003','Categoria','Tipo 2'),
+('C002','Gerente'  ,'Tipo 2'),
+('C004','Nome'     ,'Tipo 1');
+
+CREATE TABLE dim_cliente (
+    sk_cliente        INT PRIMARY KEY,
+    cod_cliente       VARCHAR(10),
+    nome              VARCHAR(60),
+    categoria         VARCHAR(20),
+    gerente           VARCHAR(40),
+    cidade            VARCHAR(40),
+    uf                VARCHAR(2),
+    inicio_validade   DATE,
+    fim_validade      DATE,
+    atual             VARCHAR(1),
+    versao            INT
+);
+
+INSERT INTO dim_cliente VALUES
+(-1,'N/A' ,'Não Informado'       ,'Desconhecida','Desconhecido','-'       ,'--','1900-01-01','9999-12-31','S',1),
+( 1,'C001','Fernanda Alves'      ,'Bronze'      ,'Sandra Melo' ,'Curitiba','PR','2025-01-01','2025-05-31','N',1),
+( 2,'C002','Marcos Ribeiro'      ,'Prata'       ,'Ana Prado'   ,'Londrina','PR','2025-01-01','2025-02-28','N',1),
+( 3,'C003','Juliana Castro'      ,'Prata'       ,'Sandra Melo' ,'Curitiba','PR','2025-01-01','2025-04-15','N',1),
+( 4,'C004','Padaria Estrela LTAD','Prata'       ,'Tiago Duarte','Maringá' ,'PR','2025-01-01','9999-12-31','S',1),
+( 5,'C005','Ricardo Sanches'     ,'Bronze'      ,'Sandra Melo' ,'Curitiba','PR','2025-01-01','9999-12-31','S',1),
+( 6,'C002','Marcos Ribeiro'      ,'Prata'       ,'Tiago Duarte','Londrina','PR','2025-03-01','9999-12-31','S',2),
+( 7,'C003','Juliana Castro'      ,'Bronze'      ,'Sandra Melo' ,'Curitiba','PR','2025-04-16','9999-12-31','S',2),
+( 8,'C001','Fernanda Alves'      ,'Ouro'        ,'Sandra Melo' ,'Curitiba','PR','2025-06-01','9999-12-31','S',2);
+
+SELECT * from dim_cliente;
+ 
+UPDATE dim_cliente 
+SET nome = 'Padaria Estrela LTDA'
+WHERE cod_cliente = 'C004';
+
+-- 7.1
+
+drop table if exists dim_perfil;
+
+create table dim_perfil(
+	sk_perfil int,
+    forma_cobranca varchar(20),
+    canal_venda varchar(20),
+    recorrente varchar(5)
+);
+
+INSERT INTO dim_perfil VALUES
+( 1,'Boleto','Online','Não'),
+( 2,'Boleto','Online','Sim'),
+( 3,'Boleto','Loja'  ,'Não'),
+( 4,'Boleto','Loja'  ,'Sim'),
+( 5,'Pix'   ,'Online','Não'),
+( 6,'Pix'   ,'Online','Sim'),
+( 7,'Pix'   ,'Loja'  ,'Não'),
+( 8,'Pix'   ,'Loja'  ,'Sim'),
+( 9,'Débito','Online','Não'),
+(10,'Débito','Online','Sim'),
+(11,'Débito','Loja'  ,'Não'),
+(12,'Débito','Loja'  ,'Sim');
+
+DROP TABLE if EXISTS dim_status;
+
+CREATE TABLE dim_perfil (
+    sk_perfil       INT PRIMARY KEY,
+    forma_cobranca  VARCHAR(20),
+    canal_venda     VARCHAR(20),
+    recorrente      VARCHAR(5)
+);
+INSERT INTO dim_perfil VALUES
+( 1,'Boleto','Online','Não'),
+( 2,'Boleto','Online','Sim'),
+( 3,'Boleto','Loja'  ,'Não'),
+( 4,'Boleto','Loja'  ,'Sim'),
+( 5,'Pix'   ,'Online','Não'),
+( 6,'Pix'   ,'Online','Sim'),
+( 7,'Pix'   ,'Loja'  ,'Não'),
+( 8,'Pix'   ,'Loja'  ,'Sim'),
+( 9,'Débito','Online','Não'),
+(10,'Débito','Online','Sim'),
+(11,'Débito','Loja'  ,'Não'),
+(12,'Débito','Loja'  ,'Sim');
+
+SELECT * FROM dim_perfil;
+ 
+
+CREATE TABLE dim_status (
+    sk_status  INT PRIMARY KEY,
+    status     VARCHAR(25),
+    grupo      VARCHAR(15)
+);
+
+INSERT INTO dim_status VALUES
+(1,'Pago antecipado','Quitado'),
+(2,'Pago em dia'    ,'Quitado'),
+(3,'Pago com atraso','Quitado'),
+(4,'A vencer'       ,'Em aberto'),
+(5,'Em atraso'      ,'Em aberto');
+
+
+CREATE TABLE fato_contas_receber (
+    num_titulo           VARCHAR(15) PRIMARY KEY,
+    nota_fiscal          VARCHAR(15),
+    sk_cliente           INT,
+    sk_tempo_emissao     INT,
+    sk_tempo_vencimento  INT,
+    sk_tempo_pagamento   INT,
+    sk_perfil            INT,
+    sk_status            INT,
+    valor_original       DECIMAL(10,2),
+    valor_pago           DECIMAL(10,2),
+    valor_em_aberto      DECIMAL(10,2),
+    dias_atraso          INT,
+    inadimplente         INT,
+    qtd_titulo           INT,
+    FOREIGN KEY (sk_cliente)          REFERENCES dim_cliente(sk_cliente),
+    FOREIGN KEY (sk_tempo_emissao)    REFERENCES dim_tempo(sk_tempo),
+    FOREIGN KEY (sk_tempo_vencimento) REFERENCES dim_tempo(sk_tempo),
+    FOREIGN KEY (sk_tempo_pagamento)  REFERENCES dim_tempo(sk_tempo),
+    FOREIGN KEY (sk_perfil)           REFERENCES dim_perfil(sk_perfil),
+    FOREIGN KEY (sk_status)           REFERENCES dim_status(sk_status)
+);
+
+INSERT INTO fato_contas_receber
+SELECT
+    v.num_titulo,
+    v.nota_fiscal,
+    c.sk_cliente,
+    te.sk_tempo,
+    tv.sk_tempo,
+    IFNULL(tp.sk_tempo, -1),
+    p.sk_perfil,
+    s.sk_status,
+    v.valor_original,
+    v.valor_pago,
+    v.valor_em_aberto,
+    v.dias_atraso,
+    v.inadimplente,
+    1
+FROM      vw_titulos_calc v
+
+-- >>> O JOIN QUE RESOLVE O PROBLEMA DO RODRIGO <<<
+-- nao basta casar o codigo do cliente: tem que casar tambem a DATA
+JOIN      dim_cliente c  ON c.cod_cliente = v.cod_cliente
+                        AND v.dt_emissao BETWEEN c.inicio_validade AND c.fim_validade
+
+JOIN      dim_tempo   te ON te.data_completa = v.dt_emissao
+JOIN      dim_tempo   tv ON tv.data_completa = v.dt_vencimento
+LEFT JOIN dim_tempo   tp ON tp.data_completa = v.dt_pagamento
+JOIN      dim_perfil  p  ON p.forma_cobranca = v.forma_cobranca
+                        AND p.canal_venda    = v.canal_venda
+                        AND p.recorrente     = v.recorrente
+JOIN      dim_status  s  ON s.status = v.status;
+
+SELECT * FROM fato_contas_receber;
+
+
+SELECT COUNT(*) AS titulos FROM fato_contas_receber;                  -- 10
+SELECT SUM(valor_original) AS carteira FROM fato_contas_receber;      -- 30520.00
+SELECT COUNT(*) AS sem_pagamento FROM fato_contas_receber
+WHERE  sk_tempo_pagamento = -1;                                       -- 5
+SELECT f.num_titulo,
+       te.data_completa      AS emissao,
+       c.nome,
+       c.categoria           AS categoria_na_epoca,
+       hoje.categoria        AS categoria_hoje
+FROM   fato_contas_receber f
+JOIN   dim_cliente c    ON c.sk_cliente = f.sk_cliente
+JOIN   dim_tempo   te   ON te.sk_tempo  = f.sk_tempo_emissao
+JOIN   dim_cliente hoje ON hoje.cod_cliente = c.cod_cliente
+                       AND hoje.atual = 'S'
+ORDER  BY f.num_titulo;

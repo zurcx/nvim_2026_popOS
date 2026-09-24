@@ -1,0 +1,56 @@
+-- Criação das tabelas gold
+
+-- v.1
+CREATE OR REPLACE VIEW vw_gold_desempenho_clubes AS
+SELECT 
+    clube,
+    posicao,
+    COUNT(id_jogador) AS total_jogadores,
+    SUM(gols) AS total_gols,
+    SUM(partidas_jogadas) AS total_partidas_disputadas,
+    CASE 
+        WHEN SUM(partidas_jogadas) = 0 THEN 0.00
+        ELSE CAST(SUM(gols) AS DECIMAL(10,2)) / SUM(partidas_jogadas)
+    END AS media_gols_setor
+FROM silver_jogadores
+GROUP BY 
+    clube, 
+    posicao;
+-- v.2
+CREATE OR REPLACE VIEW vw_gold_estatisticas_estadios AS
+SELECT 
+    nome_estadio,
+    cidade_estadio,
+    ano_partida,
+    mes_partida,
+    COUNT(id_partida) AS volume_partidas,
+    SUM(total_gols_partida) AS total_gols,
+    CAST(AVG(total_gols_partida) AS DECIMAL(5,2)) AS media_gols_por_partida
+FROM silver_partidas_detalhadas
+GROUP BY 
+    nome_estadio, 
+    cidade_estadio, 
+    ano_partida, 
+    mes_partida;
+-- v.3
+CREATE OR REPLACE VIEW vw_gold_ranking_artilheiros AS
+SELECT 
+    DENSE_RANK() OVER(ORDER BY gols DESC) AS posicao_ranking,
+    nome,
+    clube,
+    posicao,
+    gols,
+    media_gols_por_partida
+FROM silver_jogadores;
+-- v.4
+
+CREATE OR REPLACE VIEW vw_gold_mando_de_campo AS
+SELECT 
+    time_mandante,
+    SUM(CASE WHEN resultado_mandante = 'Vitória' THEN 1 ELSE 0 END) AS qtd_vitorias,
+    SUM(CASE WHEN resultado_mandante = 'Empate' THEN 1 ELSE 0 END) AS qtd_empates,
+    SUM(CASE WHEN resultado_mandante = 'Derrota' THEN 1 ELSE 0 END) AS qtd_derrotas,
+    SUM(saldo_gols) AS saldo_gols_acumulado
+FROM silver_partidas_detalhadas
+GROUP BY 
+    time_mandante;

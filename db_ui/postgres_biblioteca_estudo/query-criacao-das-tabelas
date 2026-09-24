@@ -1,0 +1,27 @@
+CREATE TABLE autores (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  nome VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE generos (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  nome VARCHAR(100) NOT NULL
+);
+
+
+CREATE TABLE livros (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  titulo VARCHAR(200) NOT NULL,
+  id_genero INT REFERENCES generos(id)
+);
+-- rodou ate aqui criar tabela intermediaria
+
+  CREATE TABLE autor_livro (
+  id_autor INT REFERENCES autores(id),
+  id_livro INT REFERENCES livros(id),
+  PRIMARY KEY(id_autor, id_livro)
+);
+
+
+
+

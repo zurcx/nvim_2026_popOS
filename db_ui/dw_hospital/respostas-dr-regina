@@ -1,0 +1,38 @@
+SELECT COUNT(*) AS linhas_na_fato FROM fato_atendimento;          -- 12
+
+SELECT SUM(custo) AS dinheiro_na_fato FROM fato_atendimento;      -- 12025.00
+
+SELECT COUNT(*) AS sem_medico   FROM fato_atendimento WHERE sk_medico = -1;    -- 1
+
+SELECT COUNT(*) AS sem_convenio FROM fato_atendimento WHERE sk_convenio = -1;  -- 2
+
+-- 8.1 tempo medio de espera por cor de risco
+SELECT r.cor,
+       r.tempo_alvo_min,
+       ROUND(AVG(f.min_espera), 1) AS espera_media,
+       COUNT(*)                    AS atendimentos
+FROM   fato_atendimento f
+JOIN   dim_risco r ON r.sk_risco = f.sk_risco
+GROUP  BY r.cor, r.tempo_alvo_min
+ORDER  BY r.tempo_alvo_min;
+
+-- 8.2 estamos dentro do tempo-alvo?
+SELECT r.cor,
+       SUM(f.dentro_do_alvo)                      AS dentro,
+       COUNT(*)                                   AS total,
+       ROUND(100 * SUM(f.dentro_do_alvo) / COUNT(*), 1) AS percentual
+FROM   fato_atendimento f
+JOIN   dim_risco r ON r.sk_risco = f.sk_risco
+GROUP  BY r.cor, r.tempo_alvo_min
+ORDER  BY r.tempo_alvo_min;
+-- Laranja 50%, todo o resto 100%
+
+-- 8.3 qual especialidade custa mais
+SELECT e.nome,
+       SUM(f.custo) AS custo_total,
+       COUNT(*)     AS atendimentos
+FROM   fato_atendimento f
+JOIN   dim_especialidade e ON e.sk_especialidade = f.sk_especialidade
+GROUP  BY e.nome
+ORDER  BY custo_total DESC;
+-- Cardiologia 9120.00 - antes da modelagem esse numero estava partido em 3 bn

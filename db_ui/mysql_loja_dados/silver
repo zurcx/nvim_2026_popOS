@@ -1,0 +1,33 @@
+DROP TABLE IF EXISTS silver_vendas;
+
+DROP TABLE IF EXISTS silver_vendas;
+CREATE TABLE silver_vendas (
+    id_registro      INT             NOT NULL,
+    id_pedido        INT             NOT NULL,
+    data_pedido      DATE            NOT NULL,           -- agora e DATE de verdade
+    id_cliente       INT             NOT NULL,
+    nome_cliente     VARCHAR(100)    NOT NULL,
+    estado           CHAR(2)         NOT NULL,
+    cidade           VARCHAR(100)    NOT NULL,
+    id_produto       VARCHAR(10)     NOT NULL,
+    nome_produto     VARCHAR(100)    NOT NULL,
+    categoria        VARCHAR(50)     NOT NULL,
+    forma_pagamento  VARCHAR(40)     NOT NULL,
+    quantidade       INT             NOT NULL,
+    preco_unitario   DECIMAL(10,2)   NOT NULL,
+    custo_unitario   DECIMAL(10,2)   NOT NULL,
+    -- ===== COLUNAS NOVAS (derivadas) =====
+    valor_total      DECIMAL(12,2)   NOT NULL,           -- quantidade * preco
+    custo_total      DECIMAL(12,2)   NOT NULL,           -- quantidade * custo
+    lucro            DECIMAL(12,2)   NOT NULL,           -- valor_total - custo_total
+    margem_lucro     DECIMAL(6,4)    NOT NULL,           -- lucro / valor_total (0 a 1)
+    ano              SMALLINT        NOT NULL,
+    mes              TINYINT         NOT NULL,
+    nome_mes         VARCHAR(20)     NOT NULL,
+    trimestre        TINYINT         NOT NULL,
+    dia_semana       VARCHAR(20)     NOT NULL,
+    -- CONSTRAINTS:
+    CONSTRAINT pk_silver       PRIMARY KEY (id_registro),
+    CONSTRAINT ck_silver_qtd   CHECK (quantidade > 0),
+    CONSTRAINT ck_silver_marg  CHECK (margem_lucro BETWEEN -1 AND 1)
+);

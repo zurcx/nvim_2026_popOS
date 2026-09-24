@@ -1,0 +1,336 @@
+--  1.1
+
+SELECT * from stg_funcionarios;
+
+SELECT departamento, count(*)
+as pessoas from stg_funcionarios GROUP BY departamento;
+
+-- 1.2
+
+SELECT COUNT(*) AS linhas FROM stg_funcionarios;                       -- 10
+SELECT COUNT(*) AS ativos FROM stg_funcionarios WHERE dt_desligamento = '';  -- 8
+
+SELECT COUNT(*) AS linhas, COUNT(DISTINCT matricula) AS pessoas FROM stg_alocacao;
+
+-- 1.3
+ 
+SELECT COUNT(*)                  AS total_linhas,
+       COUNT(DISTINCT matricula) AS matriculas_distintas
+FROM stg_alocacao;
+
+
+CREATE TABLE de_para_departamento (
+    valor_bruto  VARCHAR(30),
+    nome_certo   VARCHAR(30)
+);
+
+INSERT INTO de_para_departamento VALUES
+('Diretoria' , 'Diretoria'),
+('Tecnologia', 'Tecnologia'),
+('TI'        , 'Tecnologia'),
+('Operações' , 'Operações'),
+('Pessoas'   , 'Pessoas');
+
+-- 2.1
+
+CREATE TABLE de_para_departamento (
+    valor_bruto  VARCHAR(30),
+    nome_certo   VARCHAR(30)
+);
+INSERT INTO de_para_departamento VALUES
+('Diretoria' , 'Diretoria'),
+('Tecnologia', 'Tecnologia'),
+('TI'        , 'Tecnologia'),
+('Operações' , 'Operações'),
+('Pessoas'   , 'Pessoas');
+  
+SELECT * FROM de_para_departamento;
+
+
+-- 2.2
+
+CREATE VIEW vw_funcionarios AS
+SELECT
+    f.matricula,
+    f.nome,
+    f.cargo,
+    d.nome_certo AS departamento,
+    CASE WHEN f.gestor = '' THEN NULL ELSE f.gestor END AS gestor,
+    STR_TO_DATE(f.dt_admissao, '%d/%m/%Y') AS dt_admissao,
+    STR_TO_DATE(NULLIF(f.dt_desligamento,''), '%d/%m/%Y') AS dt_desligamento,
+    CASE WHEN f.motivo_saida = '' THEN NULL ELSE f.motivo_saida END AS motivo_saida,
+    CAST(REPLACE(REPLACE(f.salario,'.',''),',','.') AS DECIMAL(10,2)) AS salario,
+    f.nivel,
+    CASE WHEN f.genero IN ('F','Fem') THEN 'Feminino' ELSE 'Masculino' END AS genero
+FROM      stg_funcionarios     f
+LEFT JOIN de_para_departamento d ON d.valor_bruto = f.departamento;
+
+SELECT * FROM vw_funcionarios;
+
+-- 2.3 dica
+/*
+CASE WHEN f.gestor = '' THEN NULL ELSE f.gestor END AS gestor,
+    STR_TO_DATE(f.dt_admissao, '%d/%m/%Y') AS dt_admissao,
+    STR_TO_DATE(NULLIF(f.dt_desligamento,''), '%d/%m/%Y') AS dt_desligamento,
+    CASE WHEN f.motivo_saida = '' THEN NULL ELSE f.motivo_saida END AS motivo_saida,
+    CAST(REPLACE(REPLACE(f.salario,'.',''),',','.') AS DECIMAL(10,2)) AS salario,
+    f.nivel,
+    CASE WHEN f.genero IN ('F','Fem') THEN 'Feminino' ELSE 'Masculino' END AS genero
+FROM      stg_funcionarios     f
+LEFT JOIN de_para_departamento d ON d.valor_bruto = f.departamento;
+
+SELECT departamento, COUNT(*) FROM vw_funcionarios GROUP BY departamento;
+*/
+
+-- 2.4
+
+SELECT * FROM stg_alocacao;
+
+CREATE VIEW vw alocacao as 
+SELECT 
+  matricula,
+  projeto,
+  cliente,
+  CAST(REPLACE(percentual,'%','')) AS  DECIMAL(6,2)) / 100 as fator
+  AS salario_anterior
+FROM
+  stg_alocacao
+
+  
+  
+
+
+
+/*   2.4 : vw_alocacao -> matricula, projeto, cliente , fator -> CAST(REPLACE(percentual,'%','') AS DECIMAL(6,2)) / 100 AS fator e ela vem da stg_alocacao*/
+
+
+
+-- 2.5
+
+/*
+
+2.5 vw_promocoes -> matricula, cargo_anterior, cargo_novo, CAST(REPLACE(REPLACE(salario_anterior,'.',''),',','.') AS DECIMAL(10,2)) AS salario_anterior,
+       CAST(REPLACE(REPLACE(salario_novo    ,'.',''),',','.') AS DECIMAL(10,2)) AS salario_novo,
+       STR_TO_DATE(data_promocao, '%d/%m/%Y') AS dt_promocao e ela vem de stg_promocoes
+
+*/
+
+ROP VIEW IF EXISTS vw_alocacao;
+CREATE VIEW vw_alocacao AS
+SELECT matricula,
+       projeto,
+       cliente,
+       CAST(REPLACE(percentual,'%','') AS DECIMAL(6,2)) / 100 AS fator
+FROM   stg_alocacao;
+
+DROP VIEW IF EXISTS vw_treinamentos;
+CREATE VIEW vw_treinamentos AS
+SELECT turma,
+       treinamento,
+       obrigatorio,
+       STR_TO_DATE(data, '%d/%m/%Y') AS dt_treinamento,
+       instrutor,
+       matricula
+FROM   stg_treinamentos;
+
+DROP VIEW IF EXISTS vw_promocoes;
+CREATE VIEW vw_promocoes AS
+SELECT matricula,
+       cargo_anterior,
+       cargo_novo,
+       CAST(REPLACE(REPLACE(salario_anterior,'.',''),',','.') AS DECIMAL(10,2)) AS salario_anterior,
+       CAST(REPLACE(REPLACE(salario_novo    ,'.',''),',','.') AS DECIMAL(10,2)) AS salario_novo,
+       STR_TO_DATE(data_promocao, '%d/%m/%Y') AS dt_promocao
+FROM   stg_promocoes;
+
+
+-- dimensoes
+
+
+CREATE TABLE dim_departamento (
+    sk_departamento  INT PRIMARY KEY,
+    nome             VARCHAR(30),
+    diretoria        VARCHAR(20)
+);
+
+INSERT INTO dim_departamento VALUES
+(1,'Diretoria' ,'Corporativo'),
+(2,'Tecnologia','Corporativo'),
+(3,'Operações' ,'Operacional'),
+(4,'Pessoas'   ,'Corporativo');
+
+CREATE TABLE dim_projeto (
+    sk_projeto  INT PRIMARY KEY,
+    nome        VARCHAR(30),
+    cliente     VARCHAR(40),
+    tipo        VARCHAR(20)
+);
+
+INSERT INTO dim_projeto VALUES
+(1,'Aurora','Banco Sul'  ,'Cliente externo'),
+(2,'Bravo' ,'Varejo Mais','Cliente externo'),
+(3,'Carbon','Interno'    ,'Interno');
+
+CREATE TABLE dim_treinamento (
+    sk_treinamento  INT PRIMARY KEY,
+    nome            VARCHAR(40),
+    obrigatorio     VARCHAR(5),
+    instrutor       VARCHAR(40)
+);
+
+INSERT INTO dim_treinamento VALUES
+(1,'Compliance 2025'     ,'Sim','Consultoria Ética'),
+(2,'LGPD na Prática'     ,'Sim','Consultoria Ética'),
+(3,'Liderança de Equipes','Não','Instituto Lidera');
+
+CREATE TABLE dim_tipo_movimento (
+    sk_tipo  INT PRIMARY KEY,
+    tipo     VARCHAR(20),
+    grupo    VARCHAR(15)
+);
+
+INSERT INTO dim_tipo_movimento VALUES
+(1,'Admissão'    ,'Entrada'),
+(2,'Promoção'    ,'Interna'),
+(3,'Desligamento','Saída');
+
+
+CREATE TABLE dim_funcionario (
+    sk_funcionario   INT AUTO_INCREMENT PRIMARY KEY,
+    matricula        VARCHAR(10),
+    nome             VARCHAR(60),
+    cargo            VARCHAR(50),
+    nivel            VARCHAR(20),
+    genero           VARCHAR(15),
+    sk_departamento  INT,
+    sk_gestor        INT,
+    dt_admissao      DATE,
+    dt_desligamento  DATE,
+    salario          DECIMAL(10,2),
+    ativo            VARCHAR(1),
+    FOREIGN KEY (sk_departamento) REFERENCES dim_departamento(sk_departamento)
+);
+
+
+-- 4.1 primeiro todo mundo entra, ainda sem gestor
+
+INSERT INTO dim_funcionario
+    (matricula, nome, cargo, nivel, genero, sk_departamento,
+     sk_gestor, dt_admissao, dt_desligamento, salario, ativo)
+SELECT f.matricula, f.nome, f.cargo, f.nivel, f.genero, d.sk_departamento,
+       NULL, f.dt_admissao, f.dt_desligamento, f.salario,
+       CASE WHEN f.dt_desligamento IS NULL THEN 'S' ELSE 'N' END
+FROM   vw_funcionarios  f
+JOIN   dim_departamento d ON d.nome = f.departamento
+ORDER  BY f.matricula;
+
+
+-- 4.2 so DEPOIS da para resolver o gestor: ele so tem chave agora
+
+UPDATE dim_funcionario d
+JOIN   vw_funcionarios v ON v.matricula = d.matricula
+JOIN   dim_funcionario g ON g.matricula = v.gestor
+SET    d.sk_gestor = g.sk_funcionario;
+
+SELECT sk_funcionario, matricula, nome, sk_gestor, ativo FROM dim_funcionario;
+
+
+CREATE TABLE bridge_projeto (
+    sk_funcionario  INT,
+    sk_projeto      INT,
+    fator           DECIMAL(5,2),
+    PRIMARY KEY (sk_funcionario, sk_projeto),
+    FOREIGN KEY (sk_funcionario) REFERENCES dim_funcionario(sk_funcionario),
+    FOREIGN KEY (sk_projeto)     REFERENCES dim_projeto(sk_projeto)
+);
+
+INSERT INTO bridge_projeto
+SELECT f.sk_funcionario, p.sk_projeto, a.fator
+FROM   vw_alocacao     a
+JOIN   dim_funcionario f ON f.matricula = a.matricula
+JOIN   dim_projeto     p ON p.nome      = a.projeto;
+
+-- teste obrigatorio: a soma dos fatores de cada pessoa tem que dar 1
+
+SELECT f.nome, SUM(b.fator) AS soma
+FROM   bridge_projeto b
+JOIN   dim_funcionario f ON f.sk_funcionario = b.sk_funcionario
+GROUP  BY f.nome
+HAVING SUM(b.fator) <> 1;
+
+
+SELECT * FROM bridge_projeto;
+
+CREATE TABLE fato_headcount (
+    sk_mes           INT,
+    sk_funcionario   INT,
+    sk_departamento  INT,
+    salario          DECIMAL(10,2),
+    ativo            INT,
+    PRIMARY KEY (sk_mes, sk_funcionario),
+    FOREIGN KEY (sk_mes)          REFERENCES dim_mes(sk_mes),
+    FOREIGN KEY (sk_funcionario)  REFERENCES dim_funcionario(sk_funcionario),
+    FOREIGN KEY (sk_departamento) REFERENCES dim_departamento(sk_departamento)
+);
+
+-- Quem estava ativo no ultimo dia de cada mes de 2025 (janeiro a agosto)?
+
+INSERT INTO fato_headcount
+SELECT m.sk_mes, f.sk_funcionario, f.sk_departamento, f.salario, 1
+FROM   dim_mes m
+JOIN   dim_funcionario f ON f.dt_admissao <= m.ultimo_dia
+                        AND (f.dt_desligamento IS NULL OR f.dt_desligamento >= m.ultimo_dia)
+WHERE  m.sk_mes BETWEEN 202501 AND 202508;
+
+SELECT m.ano_mes, SUM(h.ativo) AS headcount
+FROM   fato_headcount h
+JOIN   dim_mes m ON m.sk_mes = h.sk_mes
+GROUP  BY m.ano_mes ORDER BY m.ano_mes;
+
+
+CREATE TABLE bridge_organograma (
+    sk_superior     INT,
+    sk_subordinado  INT,
+    niveis          INT,
+    PRIMARY KEY (sk_superior, sk_subordinado)
+);
+
+-- nivel 0: cada pessoa e superior de si mesma
+
+INSERT INTO bridge_organograma
+SELECT sk_funcionario, sk_funcionario, 0 FROM dim_funcionario;
+
+-- nivel 1: o gestor direto
+
+INSERT INTO bridge_organograma
+SELECT f.sk_gestor, f.sk_funcionario, 1
+FROM   dim_funcionario f
+WHERE  f.sk_gestor IS NOT NULL;
+
+-- nivel 2: o gestor do gestor
+
+INSERT INTO bridge_organograma
+SELECT g.sk_gestor, f.sk_funcionario, 2
+FROM   dim_funcionario f
+JOIN   dim_funcionario g ON g.sk_funcionario = f.sk_gestor
+WHERE  g.sk_gestor IS NOT NULL;
+
+-- nivel 3
+ 
+INSERT INTO bridge_organograma
+SELECT g2.sk_gestor, f.sk_funcionario, 3
+FROM   dim_funcionario f
+JOIN   dim_funcionario g1 ON g1.sk_funcionario = f.sk_gestor
+JOIN   dim_funcionario g2 ON g2.sk_funcionario = g1.sk_gestor
+WHERE  g2.sk_gestor IS NOT NULL;
+
+-- nivel 4
+INSERT INTO bridge_organograma
+SELECT g3.sk_gestor, f.sk_funcionario, 4
+FROM   dim_funcionario f
+JOIN   dim_funcionario g1 ON g1.sk_funcionario = f.sk_gestor
+JOIN   dim_funcionario g2 ON g2.sk_funcionario = g1.sk_gestor
+JOIN   dim_funcionario g3 ON g3.sk_funcionario = g2.sk_gestor
+WHERE  g3.sk_gestor IS NOT NULL;
+
+SELECT COUNT(*) AS pares FROM bridge_organograma;   -- 29

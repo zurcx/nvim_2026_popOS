@@ -164,16 +164,48 @@ vim.keymap.set("n", "<leader>dq", "<cmd>DBUIFindBuffer<CR>", {
   desc = "Query Buffer",
 })
 
--- ========================
--- 󰆼 BANCOS DE DADOS (CONFIG)
--- ========================
+-- ============================================================================
+-- 󰆼 CONFIGURAÇÃO DOS BANCOS DE DADOS (LEITURA DIRETA DO .ENV + FIXOS)
+-- ============================================================================
 
--- Garante que a tabela global g.dbs exista (para herdar as conexões do .env)
-vim.g.dbs = vim.g.dbs or {}
+-- Função interna para ler o arquivo .env do diretório atual de forma nativa
+local function carregar_env_local()
+  local env_dbs = {}
+  -- Procura por um arquivo .env na pasta onde o Neovim foi aberto
+  local f = io.open(".env", "r")
+  if f then
+    for line in f:lines() do
+      -- Ignora linhas vazias ou comentários
+      if line ~= "" and not line:match("^%s*#") then
+        -- Captura chaves que começam com DB_ e possuem uma string de conexão (ex: DB_ORACLE="oracle://...")
+        local chave, valor = line:match("^([%w_]+)%s*=%s*['\"]?(.-)['\"]?%s*$")
+        -- 🔥 BLINDAGEM: Só aceita se o valor contiver uma estrutura de URL (://)
+        if chave and valor and valor:match("://") then
+          -- Se a chave contiver a URL de conexão, vamos extrair um nome amigável
+          -- Ex: DB_ORACLE_URL -> "ORACLE" ou usa a própria chave modificada
+          local nome_banco = chave:gsub("^DB_", ""):gsub("_URL$", ""):lower()
+          env_dbs[nome_banco] = valor
+        end
+      end
+    end
+    f:close()
+  end
+  return env_dbs
+end
 
--- Tabela local com as suas conexões estáticas de estudo
+-- Define a tabela final combinando o arquivo físico com suas conexões fixas
+local dbs_atualizado = {}
+
+-- 1. Carrega as conexões dinâmicas direto do arquivo .env (ex: Oracle)
+local conexoes_env = carregar_env_local()
+for k, v in pairs(conexoes_env) do
+  dbs_atualizado[k] = v
+end
+
+-- 2. Suas conexões fixas estruturadas para o ambiente de estudos
 local conexoes_fixas = {
   postgres = "postgres://luiz.cruz:Zurcz@localhost:5432/pizzaria",
+  postgres_biblioteca_estudo = "postgres://luiz.cruz:Zurcz@localhost:5432/biblioteca_estudo",
   mysql_loja_aula = "mysql://luiz.cruz:Cruz1974@localhost:3306/loja_aula",
   mysql_meu_ecommerce = "mysql://luiz.cruz:Cruz1974@localhost:3306/meu_ecommerce",
   mysql_livraria_estudo = "mysql://luiz.cruz:Cruz1974@localhost:3306/livraria_estudo",
@@ -185,15 +217,24 @@ local conexoes_fixas = {
   mysql_rh_treinamento = "mysql://luiz.cruz:Cruz1974@localhost:3306/rh_treinamento",
   mysql_logistica = "mysql://luiz.cruz:Cruz1974@localhost:3306/logistica",
   mysql_jogos = "mysql://luiz.cruz:Cruz1974@localhost:3306/jogos",
+  mysql_cafeteria = "mysql://luiz.cruz:Cruz1974@localhost:3306/cafeteria",
+  mysql_loja_dados = "mysql://luiz.cruz:Cruz1974@localhost:3306/loja_dados",
+  mysql_campeonato = "mysql://luiz.cruz:Cruz1974@localhost:3306/campeonato",
+  transparencia = "mysql://luiz.cruz:Cruz1974@localhost:3306/transparencia",
+  dw_hospital = "mysql://luiz.cruz:Cruz1974@localhost:3306/dw_hospital",
+  dw_financeiro = "mysql://luiz.cruz:Cruz1974@localhost:3306/dw_financeiro",
+  dw_rh = "mysql://luiz.cruz:Cruz1974@localhost:3306/dw_rh",
+  log_dw = "mysql://luiz.cruz:Cruz1974@localhost:3306/log_dw",
+  net_dw = "mysql://luiz.cruz:Cruz1974@localhost:3306/net_dw",
+  dw_pata_amiga = "mysql://luiz.cruz:Cruz1974@localhost:3306/dw_pata_amiga",
 }
 
--- Mescla as conexões fixas com as dinâmicas (sem apagar o Oracle/.env)
-local dbs_atualizado = vim.g.dbs
+-- 3. Injeta as conexões fixas por cima (sem apagar as chaves vindas do .env)
 for k, v in pairs(conexoes_fixas) do
   dbs_atualizado[k] = v
 end
 
--- Devolve a tabela unificada para a variável global do Dadbod
+-- 4. Grava na variável global oficial que o Dadbod exige
 vim.g.dbs = dbs_atualizado
 
 -- Salvar query sincronizando a aba superior (Bufferline) e a lateral do Dadbod

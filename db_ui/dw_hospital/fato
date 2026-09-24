@@ -1,0 +1,56 @@
+DROP TABLE IF EXISTS fato_atendimento;
+
+CREATE TABLE fato_atendimento (
+    atendimento       VARCHAR(20) PRIMARY KEY,
+    sk_tempo          INT,
+    sk_hora           INT,
+    sk_paciente       INT,
+    sk_medico         INT,
+    sk_especialidade  INT,
+    sk_risco          INT,
+    sk_convenio       INT,
+    sk_desfecho       INT,
+    min_espera        INT,
+    min_atendimento   INT,
+    custo             DECIMAL(10,2),
+    qtd_atendimento   INT,
+    dentro_do_alvo    INT,
+    FOREIGN KEY (sk_tempo)         REFERENCES dim_tempo(sk_tempo),
+    FOREIGN KEY (sk_hora)          REFERENCES dim_hora(sk_hora),
+    FOREIGN KEY (sk_paciente)      REFERENCES dim_paciente(sk_paciente),
+    FOREIGN KEY (sk_medico)        REFERENCES dim_medico(sk_medico),
+    FOREIGN KEY (sk_especialidade) REFERENCES dim_especialidade(sk_especialidade),
+    FOREIGN KEY (sk_risco)         REFERENCES dim_risco(sk_risco),
+    FOREIGN KEY (sk_convenio)      REFERENCES dim_convenio(sk_convenio),
+    FOREIGN KEY (sk_desfecho)      REFERENCES dim_desfecho(sk_desfecho)
+);
+
+INSERT INTO fato_atendimento
+SELECT
+    v.atendimento,
+    t.sk_tempo,
+    h.sk_hora,
+    p.sk_paciente,
+    IFNULL(m.sk_medico, -1),
+    e.sk_especialidade,
+    r.sk_risco,
+    IFNULL(c.sk_convenio, -1),
+    d.sk_desfecho,
+    TIMESTAMPDIFF(MINUTE, v.dt_chegada, v.dt_inicio),
+    TIMESTAMPDIFF(MINUTE, v.dt_inicio, v.dt_alta),
+    v.valor,
+    1,
+    CASE WHEN TIMESTAMPDIFF(MINUTE, v.dt_chegada, v.dt_inicio) <= r.tempo_alvo_min
+         THEN 1 ELSE 0 END
+FROM      vw_limpo v
+JOIN      dim_tempo             t  ON t.data_completa = DATE(v.dt_chegada)
+JOIN      dim_hora              h  ON h.sk_hora       = HOUR(v.dt_chegada)
+JOIN      dim_paciente          p  ON p.cpf           = v.cpf
+LEFT JOIN dim_medico            m  ON m.crm           = v.crm
+JOIN      de_para_especialidade dp ON dp.valor_bruto  = v.especialidade
+JOIN      dim_especialidade     e  ON e.nome          = dp.nome_certo
+JOIN      dim_risco             r  ON r.cor           = v.cor_risco
+LEFT JOIN dim_convenio          c  ON c.nome          = v.convenio
+JOIN      dim_desfecho          d  ON d.descricao     = v.desfecho;
+
+SELECT * FROM fato_atendimento; r

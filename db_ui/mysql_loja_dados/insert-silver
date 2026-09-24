@@ -1,0 +1,29 @@
+INSERT INTO silver_vendas
+SELECT
+    id_registro,
+    id_pedido,
+    STR_TO_DATE(data_pedido, '%Y-%m-%d')          AS data_pedido,
+    id_cliente,
+    nome_cliente,
+    UPPER(estado)                                 AS estado,      -- padroniza UF em maiusculas
+    cidade,
+    id_produto,
+    nome_produto,
+    categoria,
+    forma_pagamento,
+    quantidade,
+    preco_unitario,
+    custo_unitario,
+    -- colunas novas:
+    ROUND(quantidade * preco_unitario, 2)                                   AS valor_total,
+    ROUND(quantidade * custo_unitario, 2)                                   AS custo_total,
+    ROUND(quantidade * (preco_unitario - custo_unitario), 2)                AS lucro,
+    ROUND((preco_unitario - custo_unitario) / preco_unitario, 4)            AS margem_lucro,
+    YEAR(STR_TO_DATE(data_pedido, '%Y-%m-%d'))                              AS ano,
+    MONTH(STR_TO_DATE(data_pedido, '%Y-%m-%d'))                             AS mes,
+    MONTHNAME(STR_TO_DATE(data_pedido, '%Y-%m-%d'))                         AS nome_mes,
+    QUARTER(STR_TO_DATE(data_pedido, '%Y-%m-%d'))                           AS trimestre,
+    DAYNAME(STR_TO_DATE(data_pedido, '%Y-%m-%d'))                           AS dia_semana
+FROM raw_vendas;
+
+select * from silver_vendas;
